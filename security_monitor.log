@@ -1,0 +1,150 @@
+2025-05-08 11:54:44,068 - INFO - Sistema de monitoramento de segurança iniciado
+2025-05-08 11:54:44,098 - WARNING -  * Debugger is active!
+2025-05-08 11:54:44,108 - INFO -  * Debugger PIN: 211-782-848
+2025-05-08 11:54:46,982 - ERROR - Erro ao obter IPs banidos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 11:54:46,989 - ERROR - Erro ao verificar acessos suspeitos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 11:54:47,027 - INFO - 127.0.0.1 - - [08/May/2025 11:54:47] "GET / HTTP/1.1" 200 -
+2025-05-08 11:54:47,091 - INFO - 127.0.0.1 - - [08/May/2025 11:54:47] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-05-08 12:00:17,852 - ERROR - Erro ao obter IPs banidos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 12:00:17,858 - ERROR - Erro ao verificar acessos suspeitos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 12:00:17,859 - INFO - 127.0.0.1 - - [08/May/2025 12:00:17] "GET / HTTP/1.1" 200 -
+2025-05-08 12:00:18,369 - ERROR - Erro ao obter IPs banidos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 12:00:18,376 - ERROR - Erro ao verificar acessos suspeitos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 12:00:18,378 - INFO - 127.0.0.1 - - [08/May/2025 12:00:18] "GET / HTTP/1.1" 200 -
+2025-05-08 12:00:18,532 - ERROR - Erro ao obter IPs banidos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 12:00:18,539 - ERROR - Erro ao verificar acessos suspeitos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 12:00:18,540 - INFO - 127.0.0.1 - - [08/May/2025 12:00:18] "GET / HTTP/1.1" 200 -
+2025-05-08 12:00:18,696 - ERROR - Erro ao obter IPs banidos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 12:00:18,703 - ERROR - Erro ao verificar acessos suspeitos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 12:00:18,704 - INFO - 127.0.0.1 - - [08/May/2025 12:00:18] "GET / HTTP/1.1" 200 -
+2025-05-08 12:00:18,828 - ERROR - Erro ao obter IPs banidos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 12:00:18,835 - ERROR - Erro ao verificar acessos suspeitos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 12:00:18,836 - INFO - 127.0.0.1 - - [08/May/2025 12:00:18] "GET / HTTP/1.1" 200 -
+2025-05-08 12:00:19,466 - INFO - 127.0.0.1 - - [08/May/2025 12:00:19] "GET /logs HTTP/1.1" 200 -
+2025-05-08 12:00:26,899 - ERROR - Erro ao obter IPs banidos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 12:00:26,906 - ERROR - Erro ao verificar acessos suspeitos: [WinError 2] O sistema não pode encontrar o arquivo especificado
+2025-05-08 12:00:26,907 - INFO - 127.0.0.1 - - [08/May/2025 12:00:26] "GET / HTTP/1.1" 200 -
+2025-05-08 12:03:48,319 - INFO -  * Detected change in 'C:\\Users\\Filipe Freitas\\Documents\\TALENTO TECH\\SafeClinica\\app.py', reloading
+2025-05-08 12:03:48,798 - INFO - Sistema de monitoramento de segurança iniciado (Windows)
+2025-05-08 12:03:48,819 - WARNING -  * Debugger is active!
+2025-05-08 12:03:48,828 - INFO -  * Debugger PIN: 211-782-848
+2025-05-08 12:04:10,201 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:04:10,206 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:04:10,261 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:04:10,267 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:04:10,289 - INFO - 127.0.0.1 - - [08/May/2025 12:04:10] "GET / HTTP/1.1" 200 -
+2025-05-08 12:04:10,394 - INFO - 127.0.0.1 - - [08/May/2025 12:04:10] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-05-08 12:04:30,520 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:04:30,525 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:04:30,532 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:04:30,537 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:04:30,539 - INFO - 127.0.0.1 - - [08/May/2025 12:04:30] "GET / HTTP/1.1" 200 -
+2025-05-08 12:04:30,585 - INFO - 127.0.0.1 - - [08/May/2025 12:04:30] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-05-08 12:04:35,997 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:04:36,002 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:04:36,050 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:04:36,055 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:04:36,058 - INFO - 127.0.0.1 - - [08/May/2025 12:04:36] "GET / HTTP/1.1" 200 -
+2025-05-08 12:04:36,718 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:04:36,723 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:04:36,728 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:04:36,733 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:04:36,735 - INFO - 127.0.0.1 - - [08/May/2025 12:04:36] "GET / HTTP/1.1" 200 -
+2025-05-08 12:04:37,304 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:04:37,310 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:04:37,314 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:04:37,319 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:04:37,321 - INFO - 127.0.0.1 - - [08/May/2025 12:04:37] "GET / HTTP/1.1" 200 -
+2025-05-08 12:04:37,790 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:04:37,795 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:04:37,799 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:04:37,804 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:04:37,806 - INFO - 127.0.0.1 - - [08/May/2025 12:04:37] "GET / HTTP/1.1" 200 -
+2025-05-08 12:04:38,198 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:04:38,204 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:04:38,209 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:04:38,214 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:04:38,216 - INFO - 127.0.0.1 - - [08/May/2025 12:04:38] "GET / HTTP/1.1" 200 -
+2025-05-08 12:04:38,489 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:04:38,494 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:04:38,499 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:04:38,504 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:04:38,506 - INFO - 127.0.0.1 - - [08/May/2025 12:04:38] "GET / HTTP/1.1" 200 -
+2025-05-08 12:04:38,717 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:04:38,722 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:04:38,727 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:04:38,733 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:04:38,735 - INFO - 127.0.0.1 - - [08/May/2025 12:04:38] "GET / HTTP/1.1" 200 -
+2025-05-08 12:04:38,838 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:04:38,843 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:04:38,848 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:04:38,853 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:04:38,855 - INFO - 127.0.0.1 - - [08/May/2025 12:04:38] "GET / HTTP/1.1" 200 -
+2025-05-08 12:04:39,017 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:04:39,022 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:04:39,030 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:04:39,036 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:04:39,039 - INFO - 127.0.0.1 - - [08/May/2025 12:04:39] "GET / HTTP/1.1" 200 -
+2025-05-08 12:55:49,986 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:55:49,991 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:55:49,998 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:55:50,004 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:55:50,007 - INFO - 127.0.0.1 - - [08/May/2025 12:55:50] "GET / HTTP/1.1" 200 -
+2025-05-08 12:55:50,051 - INFO - 127.0.0.1 - - [08/May/2025 12:55:50] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-05-08 12:55:51,035 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:55:51,043 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:55:51,056 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:55:51,063 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:55:51,065 - INFO - 127.0.0.1 - - [08/May/2025 12:55:51] "GET / HTTP/1.1" 200 -
+2025-05-08 12:55:55,486 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:55:55,491 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:55:55,496 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:55:55,501 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:55:55,503 - INFO - 127.0.0.1 - - [08/May/2025 12:55:55] "GET / HTTP/1.1" 200 -
+2025-05-08 12:55:55,544 - INFO - 127.0.0.1 - - [08/May/2025 12:55:55] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-05-08 12:55:58,330 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:55:58,335 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:55:58,341 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:55:58,346 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:55:58,347 - INFO - 127.0.0.1 - - [08/May/2025 12:55:58] "GET / HTTP/1.1" 200 -
+2025-05-08 12:55:59,127 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:55:59,131 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:55:59,136 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:55:59,143 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:55:59,145 - INFO - 127.0.0.1 - - [08/May/2025 12:55:59] "GET / HTTP/1.1" 200 -
+2025-05-08 12:56:18,252 - INFO - Sistema de monitoramento de segurança iniciado (Windows)
+2025-05-08 12:56:19,845 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.100.65:5000
+2025-05-08 12:56:19,845 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-08 12:56:19,876 - INFO -  * Restarting with watchdog (windowsapi)
+2025-05-08 12:56:20,345 - INFO - Sistema de monitoramento de segurança iniciado (Windows)
+2025-05-08 12:56:20,358 - WARNING -  * Debugger is active!
+2025-05-08 12:56:20,372 - INFO -  * Debugger PIN: 682-808-027
+2025-05-08 12:56:32,075 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:56:32,081 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:56:32,087 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:56:32,091 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:56:32,093 - INFO - 127.0.0.1 - - [08/May/2025 12:56:32] "GET / HTTP/1.1" 200 -
+2025-05-08 12:56:32,570 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:56:32,577 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:56:32,583 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:56:32,588 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:56:32,590 - INFO - 127.0.0.1 - - [08/May/2025 12:56:32] "GET / HTTP/1.1" 200 -
+2025-05-08 12:56:33,349 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 192.168.1.100
+2025-05-08 12:56:33,355 - WARNING - ALERT: IP Banido - IP na lista de banidos - IP: 10.0.0.15
+2025-05-08 12:56:33,360 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 192.168.1.100
+2025-05-08 12:56:33,366 - WARNING - ALERT: Tentativa de Acesso Suspeita - Tentativa de login falha - IP: 10.0.0.15
+2025-05-08 12:56:33,368 - INFO - 127.0.0.1 - - [08/May/2025 12:56:33] "GET / HTTP/1.1" 200 -
+2025-05-08 12:58:27,168 - INFO -  * Detected change in 'C:\\Users\\Filipe Freitas\\Documents\\TALENTO TECH\\SafeClinica\\app.py', reloading
+2025-05-08 12:58:32,144 - INFO - Sistema de monitoramento de segurança iniciado (Windows)
+2025-05-08 12:58:32,145 - WARNING -  * Debugger is active!
+2025-05-08 12:58:32,146 - INFO -  * Debugger PIN: 211-782-848
+2025-05-08 13:00:19,293 - INFO - Sistema de monitoramento de segurança iniciado (Windows)
+2025-05-08 13:00:20,557 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.100.65:5000
+2025-05-08 13:00:20,557 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-08 13:00:20,557 - INFO -  * Restarting with stat

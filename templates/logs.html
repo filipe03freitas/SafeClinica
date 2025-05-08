@@ -1,0 +1,24 @@
+<head>
+    <title>Logs - {{ clinic_name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        pre { background: #f5f5f5; padding: 15px; border-radius: 5px; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Logs de Segurança - {{ clinic_name }}</h2>
+        <div>
+            <a href="{{ url_for('admin_dashboard') }}">Voltar</a> |
+            <a href="{{ url_for('logout') }}">Sair</a>
+        </div>
+    </div>
+    
+    <pre>
+{% for log in logs %}
+{{ log }}
+{% endfor %}
+    </pre>
+</body>
+</html>

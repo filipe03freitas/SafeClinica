@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Painel - {{ clinic_name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { display: flex; justify-content: space-between; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ clinic_name }} - Painel de Segurança</h1>
+        <a href="{{ url_for('logout') }}">Sair</a>
+    </div>
+    
+    <h2>Atividades Recentes</h2>
+    <table>
+        <tr>
+            <th>Data/Hora</th>
+            <th>IP</th>
+            <th>Evento</th>
+            <th>Nível</th>
+        </tr>
+        {% for alert in alerts %}
+        <tr>
+            <td>{{ alert[2] }}</td>
+            <td>{{ alert[3] }}</td>
+            <td>{{ alert[4] }}</td>
+            <td>{{ alert[6] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
