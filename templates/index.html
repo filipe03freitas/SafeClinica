@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <script src="{{ url_for('static', filename='js/config.js') }}"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeClinica - Monitor de Segurança</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --color-critical: #dc3545;
+            --color-high: #fd7e14;
+            --color-medium: #ffc107;
+        }
+        .alert-card {
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+        .alert-card:hover {
+            transform: translateY(-3px);
+        }
+        .critical { border-color: var(--color-critical); }
+        .high { border-color: var(--color-high); }
+        .medium { border-color: var(--color-medium); }
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        #connection-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .online { background-color: #28a745; }
+        .offline { background-color: #dc3545; }
+    </style>
+    <script>
+        function getApiBaseUrl() {
+          if (window.location.host.includes('github.io')) {
+            const savedUrl = localStorage.getItem('ngrokUrl');
+            return savedUrl || prompt("Cole a URL atual do ngrok:");
+          }
+          return "http://localhost:5000";
+        }
+      
+        const API_BASE_URL = getApiBaseUrl();
+        if (API_BASE_URL.includes('ngrok')) {
+          localStorage.setItem('ngrokUrl', API_BASE_URL);
+        }
+      </script>
+      
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="text-center mb-4">
+            <h1 class="display-5 fw-bold">
+                <i class="bi bi-shield-lock"></i> SafeClinica
+            </h1>
+            <p class="lead">Monitoramento de segurança em tempo real</p>
+            
+            <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+                <span id="connection-status" class="offline"></span>
+                <small id="server-status">Conectando ao servidor...</small>
+            </div>
+            
+            <a href="https://e985-168-181-51-223.ngrok-free.app" 
+               class="btn btn-primary btn-sm" 
+               target="_blank">
+               <i class="bi bi-speedometer2"></i> Painel Admin
+            </a>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-activity"></i> Alertas Recentes
+                    <span class="badge bg-primary rounded-pill pulse ms-2" id="alert-count">0</span>
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div id="alerts-container" class="list-group list-group-flush">
+                    <div class="text-center py-5 text-muted">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="mt-2">Buscando alertas...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center text-muted small">
+            <p>Última atualização: <span id="last-update">--:--:--</span></p>
+            <p class="mb-0">SafeClinica v1.0 | Demonstração técnica</p>
+        </div>
+    </div>
+
+
+    <script>
+        const API_URL = "https://SEU-NGROK.ngrok-free.app";
+        
+        const alertsContainer = document.getElementById('alerts-container');
+        const alertCount = document.getElementById('alert-count');
+        const connectionStatus = document.getElementById('connection-status');
+        const serverStatus = document.getElementById('server-status');
+        const lastUpdate = document.getElementById('last-update');
+
+        function formatAlert(alert) {
+            const icon = {
+                'critical': 'bi-exclamation-triangle-fill',
+                'high': 'bi-exclamation-octagon-fill',
+                'medium': 'bi-exclamation-circle-fill'
+            }[alert.severity] || 'bi-info-circle-fill';
+
+            return `
+                <div class="list-group-item alert-card ${alert.severity}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi ${icon} text-${alert.severity} me-2"></i>
+                            <strong>${alert.event_type}</strong>
+                        </div>
+                        <small class="text-muted">${alert.timestamp}</small>
+                    </div>
+                    <div class="mt-2">
+                        <span class="badge bg-secondary">IP: ${alert.ip}</span>
+                        <span class="badge bg-${alert.severity} ms-2">${alert.severity}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function updateAlerts() {
+            try {
+                const response = await fetch(`${API_URL}/api/alerts`);
+                const alerts = await response.json();
+                
+                connectionStatus.classList.remove('offline');
+                connectionStatus.classList.add('online');
+                serverStatus.textContent = `Conectado: ${API_URL}`;
+                
+                if (alerts.length > 0) {
+                    alertsContainer.innerHTML = alerts.map(formatAlert).join('');
+                    alertCount.textContent = alerts.length;
+                } else {
+                    alertsContainer.innerHTML = `
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
+                            <p class="mt-2">Nenhum alerta recente</p>
+                        </div>
+                    `;
+                    alertCount.textContent = '0';
+                }
+                
+                lastUpdate.textContent = new Date().toLocaleTimeString();
+                
+            } catch (error) {
+                console.error("Erro:", error);
+                connectionStatus.classList.remove('online');
+                connectionStatus.classList.add('offline');
+                serverStatus.textContent = "Conexão falhou - Tentando reconectar...";
+                alertsContainer.innerHTML = `
+                    <div class="text-center py-4 text-danger">
+                        <i class="bi bi-cloud-slash-fill" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Não foi possível carregar alertas</p>
+                        <button onclick="updateAlerts()" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-arrow-repeat"></i> Tentar novamente
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        updateAlerts();
+        setInterval(updateAlerts, 5000);
+    </script>
+</body>
+</html>

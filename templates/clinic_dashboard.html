@@ -2,36 +2,170 @@
 <html>
 <head>
     <title>Painel - {{ clinic_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { display: flex; justify-content: space-between; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f8f9fa; }
+        .security-card { border-left: 4px solid #dc3545; }
+        .device-list { max-height: 300px; overflow-y: auto; }
+        .critical { background-color: #ffe6e6 !important; }
+        .warning { background-color: #fff3cd !important; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>{{ clinic_name }} - Painel de Segurança</h1>
-        <a href="{{ url_for('logout') }}">Sair</a>
+    <div class="container-fluid">
+        <div class="header d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3"><i class="fas fa-shield-alt me-2"></i>{{ clinic_name }} - Painel de Segurança</h1>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger"><i class="fas fa-sign-out-alt me-1"></i>Sair</a>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card security-card h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-desktop me-2"></i>Dispositivos Ativos</h5>
+                    </div>
+                    <div class="card-body device-list">
+                        <ul id="devices-list" class="list-group list-group-flush">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Estatísticas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <div class="p-3 border rounded bg-light">
+                                    <h6 class="text-danger">Tentativas Suspeitas</h6>
+                                    <h3 id="suspicious-count">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 border rounded bg-light">
+                                    <h6>Dispositivos Ativos</h6>
+                                    <h3 id="active-devices">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 border rounded bg-light">
+                                    <h6>Alertas Hoje</h6>
+                                    <h3 id="today-alerts">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Eventos de Segurança</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary me-2" id="refresh-btn">
+                        <i class="fas fa-sync-alt me-1"></i>Atualizar
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>IP</th>
+                                <th>Evento</th>
+                                <th>Nível</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="security-events">
+                            {% for alert in alerts %}
+                            <tr class="{{ 'critical' if alert[6] == 'critical' else 'warning' if alert[6] == 'warning' }}">
+                                <td>{{ alert[2] }}</td>
+                                <td>{{ alert[3] }}</td>
+                                <td>{{ alert[4] }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'danger' if alert[6] == 'critical' else 'warning' if alert[6] == 'warning' else 'primary' }}">
+                                        {{ alert[6] }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Detalhes</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <h2>Atividades Recentes</h2>
-    <table>
-        <tr>
-            <th>Data/Hora</th>
-            <th>IP</th>
-            <th>Evento</th>
-            <th>Nível</th>
-        </tr>
-        {% for alert in alerts %}
-        <tr>
-            <td>{{ alert[2] }}</td>
-            <td>{{ alert[3] }}</td>
-            <td>{{ alert[4] }}</td>
-            <td>{{ alert[6] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+
+    <script>
+        const socket = io();
+        
+        socket.on('new_security_event', (event) => {
+            const rowClass = event.level === 'critical' ? 'critical' : 
+                           event.level === 'warning' ? 'warning' : '';
+            
+            const newRow = `
+                <tr class="${rowClass}">
+                    <td>${new Date(event.timestamp).toLocaleString()}</td>
+                    <td>${event.ip}</td>
+                    <td>${event.message}</td>
+                    <td><span class="badge bg-${event.level === 'critical' ? 'danger' : 
+                                             event.level === 'warning' ? 'warning' : 'primary'}">
+                        ${event.level}
+                    </span></td>
+                    <td><button class="btn btn-sm btn-outline-primary">Detalhes</button></td>
+                </tr>`;
+            
+            $('#security-events').prepend(newRow);
+            updateStats();
+        });
+
+        socket.on('update_devices', (devices) => {
+            $('#devices-list').empty();
+            let deviceCount = 0;
+            
+            Object.entries(devices).forEach(([ip, data]) => {
+                deviceCount++;
+                $('#devices-list').append(`
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-${data.isKnown ? 'check-circle text-success' : 'exclamation-triangle text-warning'} me-2"></i>
+                            ${ip}
+                        </div>
+                        <small class="text-muted">${new Date(data.lastSeen).toLocaleTimeString()}</small>
+                    </li>
+                `);
+            });
+            
+            $('#active-devices').text(deviceCount);
+            updateStats();
+        });
+
+        function updateStats() {
+            const criticalCount = $('.critical').length;
+            const warningCount = $('.warning').length;
+            
+            $('#suspicious-count').text(criticalCount + warningCount);
+            $('#today-alerts').text($('#security-events tr').length);
+        }
+
+        $('#refresh-btn').click(() => {
+            socket.emit('request_update');
+        });
+
+        updateStats();
+        socket.emit('get_initial_data');
+    </script>
 </body>
 </html>

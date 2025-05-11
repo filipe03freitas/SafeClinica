@@ -1,0 +1,6 @@
+window.SAFECLINICA_CONFIG = {
+  API_BASE_URL: "https://e985-168-181-51-223.ngrok-free.app",
+  MAX_ALERTS: 10,
+  REFRESH_INTERVAL: 5000,
+  DEBUG_MODE: false
+};
