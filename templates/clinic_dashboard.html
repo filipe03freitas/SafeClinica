@@ -1,59 +1,138 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel - {{ clinic_name }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f8f9fa; }
-        .security-card { border-left: 4px solid #dc3545; }
-        .device-list { max-height: 300px; overflow-y: auto; }
-        .critical { background-color: #ffe6e6 !important; }
-        .warning { background-color: #fff3cd !important; }
+        :root {
+            --primary-color: #4e73df;
+            --danger-color: #e74a3b;
+            --warning-color: #f6c23e;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .security-card {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .device-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .critical {
+            background-color: #ffe6e6 !important;
+        }
+
+        .warning {
+            background-color: #fff3cd !important;
+        }
+
+        .badge-critical {
+            background-color: var(--danger-color);
+        }
+
+        .badge-warning {
+            background-color: var(--warning-color);
+        }
+
+        .badge-primary {
+            background-color: var(--primary-color);
+        }
+
+        #notification-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .spinner-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .action-dropdown .dropdown-toggle::after {
+            display: none;
+        }
     </style>
 </head>
+
 <body>
     <div class="container-fluid">
+        <!-- Cabeçalho -->
         <div class="header d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3"><i class="fas fa-shield-alt me-2"></i>{{ clinic_name }} - Painel de Segurança</h1>
-            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger"><i class="fas fa-sign-out-alt me-1"></i>Sair</a>
+            <h1 class="h3">
+                <i class="fas fa-shield-alt me-2 text-primary"></i>
+                {{ clinic_name }} - Painel de Segurança
+            </h1>
+            <button id="logout-btn" class="btn btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-1"></i>Sair
+            </button>
         </div>
-        
+
+        <!-- Linha de Widgets -->
         <div class="row">
+            <!-- Dispositivos Ativos -->
             <div class="col-md-4 mb-4">
                 <div class="card security-card h-100">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0"><i class="fas fa-desktop me-2"></i>Dispositivos Ativos</h5>
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-desktop me-2 text-primary"></i>
+                            Dispositivos Ativos
+                        </h5>
+                        <span class="badge bg-primary rounded-pill" id="device-count">0</span>
                     </div>
-                    <div class="card-body device-list">
+                    <div class="card-body device-list p-0">
                         <ul id="devices-list" class="list-group list-group-flush">
+                            <li class="list-group-item text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Carregando...</span>
+                                </div>
+                                <p class="mt-2 mb-0 text-muted">Buscando dispositivos...</p>
+                            </li>
                         </ul>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Estatísticas -->
             <div class="col-md-8 mb-4">
                 <div class="card h-100">
                     <div class="card-header bg-white">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Estatísticas</h5>
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar me-2 text-primary"></i>
+                            Estatísticas
+                        </h5>
                     </div>
                     <div class="card-body">
                         <div class="row text-center">
-                            <div class="col-md-4">
-                                <div class="p-3 border rounded bg-light">
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 border rounded bg-light h-100">
                                     <h6 class="text-danger">Tentativas Suspeitas</h6>
                                     <h3 id="suspicious-count">0</h3>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="p-3 border rounded bg-light">
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 border rounded bg-light h-100">
                                     <h6>Dispositivos Ativos</h6>
                                     <h3 id="active-devices">0</h3>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="p-3 border rounded bg-light">
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 border rounded bg-light h-100">
                                     <h6>Alertas Hoje</h6>
                                     <h3 id="today-alerts">0</h3>
                                 </div>
@@ -63,14 +142,26 @@
                 </div>
             </div>
         </div>
-        
-        <div class="card mb-4">
+
+        <!-- Tabela de Eventos -->
+        <div class="card mb-4 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Eventos de Segurança</h5>
-                <div>
-                    <button class="btn btn-sm btn-outline-secondary me-2" id="refresh-btn">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2 text-primary"></i>
+                    Eventos de Segurança
+                </h5>
+                <div class="d-flex">
+                    <button id="refresh-btn" class="btn btn-sm btn-outline-primary me-2">
                         <i class="fas fa-sync-alt me-1"></i>Atualizar
                     </button>
+                    <div class="btn-group">
+                        <a href="{{ url_for('download_logs') }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-file-earmark-zip me-1"></i>Exportar
+                        </a>
+                        <button id="copy-logs-btn" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-clipboard me-1"></i>Copiar
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -87,17 +178,37 @@
                         </thead>
                         <tbody id="security-events">
                             {% for alert in alerts %}
-                            <tr class="{{ 'critical' if alert[6] == 'critical' else 'warning' if alert[6] == 'warning' }}">
+                            <tr
+                                class="{{ 'critical' if alert[5] == 'critical' else 'warning' if alert[5] == 'warning' }}">
+                                <td>{{ alert[1] }}</td>
                                 <td>{{ alert[2] }}</td>
                                 <td>{{ alert[3] }}</td>
-                                <td>{{ alert[4] }}</td>
                                 <td>
-                                    <span class="badge bg-{{ 'danger' if alert[6] == 'critical' else 'warning' if alert[6] == 'warning' else 'primary' }}">
-                                        {{ alert[6] }}
+                                    <span
+                                        class="badge {{ 'badge-critical' if alert[5] == 'critical' else 'badge-warning' if alert[5] == 'warning' else 'badge-primary' }}">
+                                        {{ alert[5] }}
                                     </span>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary">Detalhes</button>
+                                    <div class="dropdown action-dropdown">
+                                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="/device_details?ip={{ alert[2] }}">
+                                                    <i class="fas fa-info-circle me-2"></i>Detalhes
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item"
+                                                    onclick="copyToClipboard('{{ alert[2] }}')">
+                                                    <i class="fas fa-copy me-2"></i>Copiar IP
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -108,64 +219,147 @@
         </div>
     </div>
 
+    <!-- Toast de Notificação -->
+    <div id="notification-toast" class="toast align-items-center text-white bg-success" role="alert"
+        aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="toast-message"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const socket = io();
-        
-        socket.on('new_security_event', (event) => {
-            const rowClass = event.level === 'critical' ? 'critical' : 
-                           event.level === 'warning' ? 'warning' : '';
-            
-            const newRow = `
-                <tr class="${rowClass}">
-                    <td>${new Date(event.timestamp).toLocaleString()}</td>
-                    <td>${event.ip}</td>
-                    <td>${event.message}</td>
-                    <td><span class="badge bg-${event.level === 'critical' ? 'danger' : 
-                                             event.level === 'warning' ? 'warning' : 'primary'}">
-                        ${event.level}
-                    </span></td>
-                    <td><button class="btn btn-sm btn-outline-primary">Detalhes</button></td>
-                </tr>`;
-            
-            $('#security-events').prepend(newRow);
-            updateStats();
-        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const socket = io();
+            const toast = new bootstrap.Toast(document.getElementById('notification-toast'));
 
-        socket.on('update_devices', (devices) => {
-            $('#devices-list').empty();
-            let deviceCount = 0;
-            
-            Object.entries(devices).forEach(([ip, data]) => {
-                deviceCount++;
-                $('#devices-list').append(`
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-${data.isKnown ? 'check-circle text-success' : 'exclamation-triangle text-warning'} me-2"></i>
-                            ${ip}
-                        </div>
-                        <small class="text-muted">${new Date(data.lastSeen).toLocaleTimeString()}</small>
-                    </li>
-                `);
+            async function updateConnectedDevices() {
+                try {
+                    const response = await fetch('/api/connected_devices');
+                    const devices = await response.json();
+                    const listElement = document.getElementById('devices-list');
+
+                    if (devices.length === 0) {
+                        listElement.innerHTML = `
+                            <li class="list-group-item text-center py-4 text-muted">
+                                <i class="fas fa-desktop-slash fa-2x mb-2"></i>
+                                <p>Nenhum dispositivo ativo</p>
+                            </li>
+                        `;
+                    } else {
+                        listElement.innerHTML = devices.map(device => `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-laptop-medical text-primary me-2"></i>
+                                    <span>${device.custom_name || device.ip}</span>
+                                </div>
+                                <small class="text-muted">${formatLastSeen(device.last_seen)}</small>
+                            </li>
+                        `).join('');
+                    }
+
+                    updateCounters(devices.length);
+
+                } catch (error) {
+                    console.error('Erro ao buscar dispositivos:', error);
+                    showToast('Erro ao carregar dispositivos', 'danger');
+                }
+            }
+
+            function updateCounters(activeDevices) {
+                document.getElementById('device-count').textContent = activeDevices;
+                document.getElementById('active-devices').textContent = activeDevices;
+
+                const criticalCount = document.querySelectorAll('.badge-critical').length;
+                const warningCount = document.querySelectorAll('.badge-warning').length;
+                document.getElementById('suspicious-count').textContent = criticalCount + warningCount;
+                document.getElementById('today-alerts').textContent = document.querySelectorAll('#security-events tr').length;
+            }
+
+            function formatLastSeen(timestamp) {
+                if (!timestamp) return 'Nunca';
+                const now = new Date();
+                const lastSeen = new Date(timestamp);
+                const diffMinutes = Math.floor((now - lastSeen) / (1000 * 60));
+
+                if (diffMinutes < 1) return 'Agora mesmo';
+                if (diffMinutes < 60) return `${diffMinutes} min atrás`;
+                return lastSeen.toLocaleTimeString();
+            }
+
+            function showToast(message, type = 'success') {
+                const toastElement = document.getElementById('notification-toast');
+                toastElement.className = `toast align-items-center text-white bg-${type}`;
+                document.getElementById('toast-message').textContent = message;
+                toast.show();
+            }
+
+            function copyToClipboard(text) {
+                navigator.clipboard.writeText(text)
+                    .then(() => showToast('IP copiado para a área de transferência'))
+                    .catch(err => console.error('Erro ao copiar:', err));
+            }
+
+            document.getElementById('refresh-btn').addEventListener('click', function () {
+                this.querySelector('i').classList.add('fa-spin');
+                updateConnectedDevices();
+                setTimeout(() => {
+                    this.querySelector('i').classList.remove('fa-spin');
+                }, 1000);
             });
+
+            document.getElementById('copy-logs-btn').addEventListener('click', function () {
+                const logs = Array.from(document.querySelectorAll('#security-events tr'))
+                    .map(row => Array.from(row.cells)
+                        .map(cell => cell.textContent.trim())
+                        .join('\t'))
+                    .join('\n');
+
+                navigator.clipboard.writeText(logs)
+                    .then(() => showToast('Logs copiados com sucesso'))
+                    .catch(err => showToast('Erro ao copiar logs', 'danger'));
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', async function () {
+                const btn = this;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saindo...';
+                btn.classList.add('disabled');
+
+                try {
+                    const response = await fetch('/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    if (response.ok) {
+                        setTimeout(() => {
+                            window.location.href = '/login'; 
+                        }, 1000);
+                    } else {
+                        throw new Error('Falha no logout');
+                    }
+                } catch (error) {
+                    console.error('Erro no logout:', error);
+                    btn.innerHTML = '<i class="fas fa-sign-out-alt me-1"></i>Sair';
+                    btn.classList.remove('disabled');
+                    showToast('Falha ao sair. Tente novamente.', 'danger');
+                }
+            });
+
             
-            $('#active-devices').text(deviceCount);
-            updateStats();
+            socket.on('new_security_event', (data) => {
+                updateConnectedDevices();
+            });
+
+            updateConnectedDevices();
+            setInterval(updateConnectedDevices, 30000); 
         });
-
-        function updateStats() {
-            const criticalCount = $('.critical').length;
-            const warningCount = $('.warning').length;
-            
-            $('#suspicious-count').text(criticalCount + warningCount);
-            $('#today-alerts').text($('#security-events tr').length);
-        }
-
-        $('#refresh-btn').click(() => {
-            socket.emit('request_update');
-        });
-
-        updateStats();
-        socket.emit('get_initial_data');
     </script>
 </body>
+
 </html>

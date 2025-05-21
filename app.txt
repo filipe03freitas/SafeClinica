@@ -11,7 +11,7 @@ from datetime import datetime
 
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  
+app.secret_key = 'tester'  
 CORS(app) 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -65,6 +65,7 @@ def log_alert(clinic_id, ip, event_type, description, severity="medium"):
         conn = sqlite3.connect('safeclinica.db', check_same_thread=False)
         c = conn.cursor()
 
+        # 1. Registra o alerta principal
         c.execute("""
             INSERT INTO alerts 
             (clinic_id, timestamp, ip, event_type, description, severity) 
@@ -72,6 +73,7 @@ def log_alert(clinic_id, ip, event_type, description, severity="medium"):
             """, 
             (clinic_id, timestamp, ip, event_type, description, severity))
 
+        # 2. Atualiza/insere informações do dispositivo
         c.execute("""
             INSERT INTO devices (ip, last_seen, first_seen)
             VALUES (?, ?, COALESCE((SELECT first_seen FROM devices WHERE ip = ?), ?))
@@ -82,6 +84,7 @@ def log_alert(clinic_id, ip, event_type, description, severity="medium"):
 
         conn.commit()
 
+        # 3. Prepara dados para o Socket.IO
         event_data = {
             'timestamp': timestamp,
             'ip': ip,
@@ -91,8 +94,10 @@ def log_alert(clinic_id, ip, event_type, description, severity="medium"):
             'clinic_id': clinic_id
         }
 
+        # 4. Emite o evento em tempo real
         socketio.emit('new_security_event', event_data, room=f'clinic_{clinic_id}')
 
+        # 5. Atualiza estatísticas globais
         socketio.emit('update_stats', {
             'clinic_id': clinic_id,
             'new_alert': True
@@ -100,6 +105,7 @@ def log_alert(clinic_id, ip, event_type, description, severity="medium"):
 
     except sqlite3.Error as e:
         print(f"ERRO no log_alert: {str(e)}")
+        # Log adicional para monitoramento
         with open('error_log.txt', 'a') as f:
             f.write(f"{timestamp} - Erro ao registrar alerta: {str(e)}\n")
         
@@ -187,13 +193,16 @@ def register():
                      (clinic_name, username, password))
             conn.commit()
             
+            # Busca o ID da clínica recém-criada
             c.execute("SELECT id FROM clinics WHERE admin_user = ?", (username,))
             clinic_id = c.fetchone()[0]
             conn.close()
             
+            # Autentica automaticamente o usuário
             session['clinic_id'] = clinic_id
             session['clinic_name'] = clinic_name
             
+            # Redireciona para o dashboard (não para login)
             return redirect(url_for('clinic_dashboard'))
             
         except sqlite3.IntegrityError:
@@ -232,6 +241,7 @@ def logout():
 def logout():
     try:
         if 'clinic_id' in session:
+            # Registra o log de logout
             log_alert(
                 session['clinic_id'], 
                 request.remote_addr,
@@ -240,21 +250,23 @@ def logout():
                 'info'
             )
         
+        # Limpa completamente a sessão
         session.clear()
         
+        # Resposta para requisições AJAX
         if request.method == 'POST':
             return jsonify({
                 'success': True,
                 'message': 'Logout realizado com sucesso'
             }), 200
-
+        # Redirecionamento para requisições normais
         else:
             flash('Logout realizado com sucesso', 'success')
             return redirect(url_for('login'))
             
     except Exception as e:
         print(f"ERRO NO LOGOUT: {str(e)}")
-        session.clear() 
+        session.clear()  # Garante que a sessão seja limpa mesmo com erro
         
         if request.method == 'POST':
             return jsonify({
@@ -293,9 +305,11 @@ def get_device_info(ip):
     conn = sqlite3.connect('safeclinica.db')
     c = conn.cursor()
     
+    # Informações do dispositivo
     c.execute("SELECT * FROM devices WHERE ip = ?", (ip,))
     device = c.fetchone()
     
+    # Histórico de atividades
     c.execute("""
         SELECT timestamp, event_type, description 
         FROM alerts 
@@ -330,6 +344,7 @@ def rename_device():
     conn = sqlite3.connect('safeclinica.db')
     c = conn.cursor()
     
+    # Verifica se já existe registro
     c.execute("SELECT 1 FROM devices WHERE ip = ?", (ip,))
     if c.fetchone():
         c.execute("UPDATE devices SET custom_name = ? WHERE ip = ?", (new_name, ip))
@@ -353,9 +368,11 @@ def device_details():
     conn = sqlite3.connect('safeclinica.db', check_same_thread=False)
     c = conn.cursor()
     
+    # Busca informações do dispositivo
     c.execute("SELECT * FROM devices WHERE ip = ?", (ip,))
     device = c.fetchone()
     
+    # Busca histórico relacionado ao IP e clínica
     c.execute("""
         SELECT timestamp, event_type, description, severity 
         FROM alerts 
@@ -396,6 +413,7 @@ def get_connected_devices():
     if 'clinic_id' not in session:
         return jsonify([])
     
+    # Filtra dispositivos ativos (últimos 5 minutos)
     active_devices = {
         ip: time.isoformat() 
         for ip, time in connected_devices.items() 
@@ -452,6 +470,7 @@ def update_device_name():
     c = conn.cursor()
     
     try:
+        # Verifica se já existe registro
         c.execute("SELECT 1 FROM devices WHERE ip = ?", (ip,))
         if c.fetchone():
             c.execute("UPDATE devices SET custom_name = ? WHERE ip = ?", (new_name, ip))
@@ -475,9 +494,11 @@ def download_logs():
         if 'clinic_id' not in session:
             return redirect(url_for('login'))
 
+        # Obter dados da clínica
         clinic_id = session['clinic_id']
         clinic_name = session.get('clinic_name', 'logs')
         
+        # Obter os logs do banco de dados
         conn = sqlite3.connect('safeclinica.db')
         c = conn.cursor()
         c.execute("""
@@ -489,10 +510,12 @@ def download_logs():
         logs = c.fetchall()
         conn.close()
 
+        # Criar conteúdo CSV
         csv_content = "Data/Hora,IP,Tipo de Evento,Descrição,Severidade\n"
         for log in logs:
             csv_content += f'"{log[0]}","{log[1]}","{log[2]}","{log[3]}","{log[4]}"\n'
 
+        # Criar arquivo ZIP em memória
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             zip_file.writestr(
@@ -501,6 +524,7 @@ def download_logs():
             )
         zip_buffer.seek(0)
 
+        # Configurar resposta
         response = make_response(zip_buffer.read())
         response.headers['Content-Disposition'] = (
             f'attachment; filename=logs_{clinic_name}_{datetime.now().strftime("%Y%m%d")}.zip'

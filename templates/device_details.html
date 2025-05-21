@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Dispositivo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .device-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: none;
+            margin-bottom: 24px;
+        }
+        
+        .device-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #eaeaea;
+            padding: 20px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        
+        .activity-log {
+            padding: 0;
+        }
+        
+        .log-entry {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .log-entry:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .log-success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .log-warning {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .log-critical {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .log-info {
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .log-time {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        .log-badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+        }
+        
+        .no-activity {
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="card device-card">
+            <div class="device-header">
+                <h3 class="mb-4">Detalhes do Dispositivo</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>Endereço IP:</strong> {{ device.ip }}</p>
+                        <p class="mb-2"><strong>Nome:</strong>
+                            <span id="device-name">{{ device.custom_name or device.ip }}</span>
+                            <button class="btn btn-sm btn-outline-primary ms-2" id="edit-name-btn">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        {% if device.first_seen %}
+                        <p class="mb-2"><strong>Primeira conexão:</strong> {{ device.first_seen }}</p>
+                        <p class="mb-2"><strong>Última atividade:</strong> {{ device.last_seen }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body activity-log">
+                <h5 class="card-title mb-4">Histórico de Atividades</h5>
+                
+                <div id="activity-history">
+                    {% for event in history %}
+                    <div class="log-entry log-{{ event[3] }}">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0">{{ event[2] }}</h6>
+                            <span class="badge log-badge bg-{{ 'danger' if event[3] == 'critical' else 'warning' if event[3] == 'warning' else 'primary' if event[3] == 'info' else 'success' }}">
+                                {{ event[1] }}
+                            </span>
+                        </div>
+                        <p class="log-time mb-0">{{ event[0] }}</p>
+                    </div>
+                    {% else %}
+                    <div class="no-activity">
+                        <p class="mb-0"><i class="far fa-clock me-2"></i>Nenhuma atividade registrada</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="renameModal" tabindex="-1"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const editBtn = document.getElementById('edit-name-btn');
+            const deviceName = document.getElementById('device-name');
+            const ip = "{{ device.ip }}";
+
+            editBtn.addEventListener('click', function () {
+                const currentName = deviceName.textContent;
+                const newName = prompt("Digite o novo nome para este dispositivo:", currentName);
+
+                if (newName && newName !== currentName) {
+                    fetch('/update_device_name', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ip: ip,
+                            name: newName
+                        })
+                    }).then(response => {
+                        if (response.ok) {
+                            deviceName.textContent = newName;
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
