@@ -1,0 +1,32 @@
+# Dependências principais
+Flask==2.3.2
+Flask-SocketIO==5.3.4
+Flask-CORS==3.0.10
+Werkzeug==2.3.7
+
+# Banco de dados
+sqlite3==2.6.0  
+
+# Segurança
+python-dotenv==1.0.0 
+bcrypt==4.0.1  
+
+# Processamento de dados
+python-dateutil==2.8.2
+
+click==8.1.3  
+itsdangerous==2.1.2 
+Jinja2==3.1.2
+MarkupSafe==2.1.3 
+six==1.16.0  
+
+python-engineio==4.4.1
+python-socketio==5.8.0
+
+# Para geração de arquivos ZIP
+zipfile36==0.1.3  
+
+# Para desenvolvimento (opcional)
+pytest==7.4.0
+pytest-cov==4.1.0
+flake8==6.1.0

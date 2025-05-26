@@ -1,24 +1,137 @@
+<!DOCTYPE html>
+<html>
+
 <head>
     <title>Logs - {{ clinic_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        pre { background: #f5f5f5; padding: 15px; border-radius: 5px; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .log-actions {
+            margin-bottom: 15px;
+        }
+
+        /* Estilo da notificação */
+        #notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+            max-width: 300px;
+            z-index: 1000;
+            border-left: 5px solid #28a745;
+        }
+
+        .close-notification {
+            float: right;
+            cursor: pointer;
+            margin-left: 10px;
+            color: #155724;
+        }
     </style>
 </head>
+
 <body>
-    <div class="header">
-        <h2>Logs de Segurança - {{ clinic_name }}</h2>
-        <div>
-            <a href="{{ url_for('admin_dashboard') }}">Voltar</a> |
-            <a href="{{ url_for('logout') }}">Sair</a>
+    <div class="container">
+        <div id="notification">
+            <span class="close-notification">&times;</span>
+            <i class="bi bi-check-circle-fill"></i> Logs copiados com sucesso!
         </div>
+
+        <div class="header">
+            <h2>Logs de Segurança - {{ clinic_name }}</h2>
+            <div>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-sm btn-outline-secondary">Voltar</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger">Sair</a>
+            </div>
+        </div>
+
+        <div class="log-actions">
+            <a href="{{ url_for('download_logs') }}" class="btn btn-primary">
+                <i class="bi bi-file-earmark-zip"></i> Download (ZIP)
+            </a>
+            <button id="copyButton" class="btn btn-secondary">
+                <i class="bi bi-clipboard"></i> Copiar Logs
+            </button>
+        </div>
+
+        <pre id="logs-content">
+            {% for log in logs %}
+            {{ log.timestamp }} | {{ log.ip }} | {{ log.event_type }} | {{ log.description }} | {{ log.severity }}
+            {% endfor %}
+        </pre>
     </div>
-    
-    <pre>
-{% for log in logs %}
-{{ log }}
-{% endfor %}
-    </pre>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const copyButton = document.getElementById('copyButton');
+            const notification = document.getElementById('notification');
+            const closeButton = document.querySelector('.close-notification');
+
+            function showNotification() {
+                notification.style.display = 'block';
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 3000);
+            }
+
+            closeButton.addEventListener('click', () => {
+                notification.style.display = 'none';
+            });
+
+            copyButton.addEventListener('click', async () => {
+                try {
+                    const logsContent = document.getElementById('logs-content').innerText;
+
+                    if (navigator.clipboard) {
+                        await navigator.clipboard.writeText(logsContent);
+                        showNotification();
+                        return;
+                    }
+
+                    const textarea = document.createElement('textarea');
+                    textarea.value = logsContent;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = 0;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+
+                    if (document.execCommand('copy')) {
+                        showNotification();
+                    } else {
+                        throw new Error('Fallback copy failed');
+                    }
+
+                    document.body.removeChild(textarea);
+                } catch (err) {
+                    console.error('Erro ao copiar:', err);
+                    alert('Falha ao copiar os logs. Selecione o texto manualmente e pressione Ctrl+C.');
+                }
+            });
+        });
+    </script>
 </body>
+
 </html>

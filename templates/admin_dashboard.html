@@ -1,66 +1,246 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <title>SafeClinica - Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - {{ clinic_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; }
-        .tab { overflow: hidden; border: 1px solid #ccc; background-color: #f1f1f1; }
-        .tab button { float: left; border: none; outline: none; cursor: pointer; padding: 14px 16px; }
-        .tab button.active { background-color: #ddd; }
-        .tabcontent { display: none; padding: 20px; border: 1px solid #ccc; border-top: none; }
-        input { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; }
-        button { background-color: #4CAF50; color: white; padding: 14px 20px; border: none; cursor: pointer; width: 100%; }
-        .message { color: red; margin: 15px 0; }
+        :root {
+            --primary-color: #4e73df;
+            --danger-color: #e74a3b;
+            --warning-color: #f6c23e;
+        }
+        .sidebar {
+            background: linear-gradient(180deg, var(--primary-color) 0%, #224abe 100%);
+            min-height: 100vh;
+        }
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+        .nav-link:hover {
+            color: white !important;
+        }
+        .nav-link.active {
+            color: white !important;
+            font-weight: bold;
+        }
+        .card-header {
+            font-weight: 600;
+        }
+        .critical-badge {
+            background-color: var(--danger-color);
+        }
+        .warning-badge {
+            background-color: var(--warning-color);
+        }
     </style>
 </head>
 <body>
-    <h2>SafeClinica</h2>
-    
-    <div class="tab">
-        <button class="tablinks active" onclick="openTab(event, 'login')">Login</button>
-        <button class="tablinks" onclick="openTab(event, 'register')">Cadastrar Clínica</button>
-    </div>
-    
-    <div id="login" class="tabcontent" style="display: block;">
-        <form method="POST" action="{{ url_for('login') }}">
-            <input type="text" name="username" placeholder="Usuário Admin" required>
-            <input type="password" name="password" placeholder="Senha" required>
-            <button type="submit">Entrar</button>
-        </form>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="message">
-                    {% for message in messages %}
-                        {{ message }}
-                    {% endfor %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3 col-lg-2 d-md-block sidebar collapse bg-primary text-white">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-shield-alt fa-3x mb-2"></i>
+                        <h4>SafeClinica</h4>
+                        <p class="text-white-50 small">{{ clinic_name }}</p>
+                    </div>
+                    
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">
+                                <i class="fas fa-fw fa-tachometer-alt me-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-fw fa-desktop me-2"></i>
+                                Dispositivos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-fw fa-exclamation-triangle me-2"></i>
+                                Alertas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-fw fa-users me-2"></i>
+                                Usuários
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">
+                                <i class="fas fa-fw fa-sign-out-alt me-2"></i>
+                                Sair
+                            </a>
+                        </li>
+                    </ul>
                 </div>
-            {% endif %}
-        {% endwith %}
+            </div>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button class="btn btn-sm btn-outline-secondary" id="refresh-btn">
+                            <i class="fas fa-sync-alt me-1"></i> Atualizar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            Dispositivos Ativos</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="active-devices">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-laptop fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            Alertas Hoje</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="today-alerts">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-left-danger shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                            Tentativas Suspeitas</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="suspicious-count">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-exclamation-triangle me-2"></i>Alertas Recentes</h6>
+                        <div>
+                            <a href="{{ url_for('download_logs') }}" class="btn btn-sm btn-primary me-2">
+                                <i class="fas fa-download me-1"></i> Exportar
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Data/Hora</th>
+                                        <th>IP</th>
+                                        <th>Evento</th>
+                                        <th>Nível</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for alert in alerts %}
+                                    <tr class="{{ 'table-danger' if alert[5] == 'critical' else 'table-warning' if alert[5] == 'warning' }}">
+                                        <td>{{ alert[1] }}</td>
+                                        <td>{{ alert[2] }}</td>
+                                        <td>{{ alert[3] }}</td>
+                                        <td>
+                                            <span class="badge {{ 'critical-badge' if alert[5] == 'critical' else 'warning-badge' if alert[5] == 'warning' else 'bg-primary' }}">
+                                                {{ alert[5] }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-cog"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ url_for('device_details', ip=alert[2]) }}">
+                                                            <i class="fas fa-info-circle me-2"></i> Detalhes
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <button class="dropdown-item" onclick="banDevice('{{ alert[2] }}')">
+                                                            <i class="fas fa-ban me-2"></i> Bloquear
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
-    
-    <div id="register" class="tabcontent">
-        <form method="POST" action="{{ url_for('register') }}">
-            <input type="text" name="clinic_name" placeholder="Nome da Clínica" required>
-            <input type="text" name="username" placeholder="Usuário Admin" required>
-            <input type="password" name="password" placeholder="Senha" required>
-            <button type="submit">Cadastrar</button>
-        </form>
-    </div>
-    
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
+
+        const socket = io();
+        
+        
+        socket.on('update_stats', (data) => {
+            if (data.new_alert) {
+                document.getElementById('today-alerts').textContent = 
+                    parseInt(document.getElementById('today-alerts').textContent) + 1;
             }
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
+        });
+
+        
+        function banDevice(ip) {
+            if (confirm(`Tem certeza que deseja bloquear o IP ${ip}?`)) {
+                fetch('/ban_ip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ip: ip })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`IP ${ip} bloqueado com sucesso!`);
+                    }
+                });
             }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
         }
+
+        document.getElementById('refresh-btn').addEventListener('click', () => {
+            location.reload();
+        });
     </script>
 </body>
 </html>
