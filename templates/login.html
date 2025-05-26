@@ -1,52 +1,138 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>SafeClinica - Login</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; }
-        .tab { overflow: hidden; border: 1px solid #ccc; background-color: #f1f1f1; }
-        .tab button { float: left; border: none; outline: none; cursor: pointer; padding: 14px 16px; }
-        .tab button.active { background-color: #ddd; }
-        .tabcontent { display: none; padding: 20px; border: 1px solid #ccc; border-top: none; }
-        input { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; }
-        button { background-color: #4CAF50; color: white; padding: 14px 20px; border: none; cursor: pointer; width: 100%; }
-        .message { color: red; margin: 15px 0; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .tab button {
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            width: 50%;
+        }
+
+        .tab button:hover {
+            background-color: #ddd;
+        }
+
+        .tab button.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .message {
+            color: red;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        #modal2fa {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
     </style>
 </head>
+
 <body>
-    <h2>SafeClinica</h2>
-    
-    <div class="tab">
-        <button class="tablinks active" onclick="openTab(event, 'login')">Login</button>
-        <button class="tablinks" onclick="openTab(event, 'register')">Cadastrar Clínica</button>
+    <div class="container">
+        <h2>SafeClinica</h2>
+
+        <div class="tab">
+            <button class="tablinks active" onclick="openTab(event, 'login')">Login</button>
+            <button class="tablinks" onclick="openTab(event, 'register')">Cadastrar Clínica</button>
+        </div>
+
+        <div id="login" class="tabcontent" style="display: block;">
+            <div id="loginFields">
+                <input type="text" id="username" placeholder="Usuário Admin" required>
+                <input type="password" id="password" placeholder="Senha" required>
+                <button onclick="submitLogin()">Entrar</button>
+            </div>
+
+            <div id="modal2fa" style="display: none;">
+                <h3>Verificação em Dois Fatores</h3>
+                <input type="text" id="code2fa" placeholder="Código de 6 dígitos">
+                <button onclick="verify2fa()">Verificar</button>
+            </div>
+
+            <div id="message" class="message"></div>
+        </div>
+
+        <div id="register" class="tabcontent">
+            <form method="POST" action="{{ url_for('register') }}">
+                <input type="text" name="clinic_name" placeholder="Nome da Clínica" required>
+                <input type="text" name="username" placeholder="Usuário Admin" required>
+                <input type="password" name="password" placeholder="Senha" required>
+                <button type="submit">Cadastrar</button>
+            </form>
+        </div>
     </div>
-    
-    <div id="login" class="tabcontent" style="display: block;">
-        <form method="POST" action="{{ url_for('login') }}">
-            <input type="text" name="username" placeholder="Usuário Admin" required>
-            <input type="password" name="password" placeholder="Senha" required>
-            <button type="submit">Entrar</button>
-        </form>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="message">
-                    {% for message in messages %}
-                        {{ message }}
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-    </div>
-    
-    <div id="register" class="tabcontent">
-        <form method="POST" action="{{ url_for('register') }}">
-            <input type="text" name="clinic_name" placeholder="Nome da Clínica" required>
-            <input type="text" name="username" placeholder="Usuário Admin" required>
-            <input type="password" name="password" placeholder="Senha" required>
-            <button type="submit">Cadastrar</button>
-        </form>
-    </div>
-    
+
     <script>
         function openTab(evt, tabName) {
             var i, tabcontent, tablinks;
@@ -61,6 +147,84 @@
             document.getElementById(tabName).style.display = "block";
             evt.currentTarget.className += " active";
         }
+        function showMessage(text, isError = true) {
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = text;
+            msgDiv.style.color = isError ? 'red' : 'green';
+        }
+
+        async function submitLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showMessage('Usuário e senha são obrigatórios');
+                return;
+            }
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (result.requires2fa) {
+                        document.getElementById('loginFields').style.display = 'none';
+                        document.getElementById('modal2fa').style.display = 'block';
+                        // Auto-preenchimento apenas em desenvolvimento
+                        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                            document.getElementById('code2fa').value = "123456";
+                        }
+                    } else if (result.success) {
+                        window.location.href = result.redirect || "/clinic/dashboard";
+                    }
+                } else {
+                    showMessage(result.message || 'Erro no login');
+                }
+            } catch (error) {
+                console.error("Erro:", error);
+                showMessage("Erro ao conectar com o servidor");
+            }
+        }
+
+        async function verify2fa() {
+            const code = document.getElementById('code2fa').value;
+
+            if (!code || code.length !== 6) {
+                showMessage('Código deve ter 6 dígitos');
+                return;
+            }
+
+            try {
+                const response = await fetch('/verify-2fa', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    window.location.href = result.redirect || "/clinic/dashboard";
+                } else {
+                    showMessage(result.message || 'Código inválido');
+                }
+            } catch (error) {
+                console.error("Erro:", error);
+                showMessage("Erro ao verificar código");
+            }
+        }
     </script>
 </body>
+
 </html>
