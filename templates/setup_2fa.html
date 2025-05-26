@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2 class="my-4">🔒 Ativar Autenticação em Dois Fatores</h2>
+    
+    <div class="card shadow">
+        <div class="card-body text-center">
+            <h5>1. Escaneie este QR Code:</h5>
+            <img src="data:image/png;base64,{{ qr_code }}" class="img-fluid my-3" style="max-width: 200px;">
+            <p class="text-muted">
+                Use <strong>Google Authenticator</strong> ou similar
+            </p>
+            
+            <hr>
+            
+            <h5 class="mt-4">2. Digite o código gerado:</h5>
+            <form method="POST" class="mt-3">
+                <input type="text" name="code" class="form-control text-center" 
+                       placeholder="Ex: 123456" required style="font-size: 1.2rem;">
+                <button type="submit" class="btn btn-primary btn-lg mt-3">
+                    Ativar 2FA
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

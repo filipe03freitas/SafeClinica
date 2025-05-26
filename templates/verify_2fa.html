@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    🔐 Verificação de Segurança
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="verifyForm">
+                        <div class="mb-3">
+                            <label for="code" class="form-label">Código do Autenticador</label>
+                            <input type="text" class="form-control" id="code" name="code" 
+                                   placeholder="Digite o código de 6 dígitos" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Verificar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('verifyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const code = document.getElementById('code').value;
+    
+    fetch('/verify-2fa', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `code=${encodeURIComponent(code)}`
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            return response.text();
+        }
+    })
+    .then(text => {
+        if (text) {
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Erro na verificação');
+    });
+});
+</script>
+{% endblock %}

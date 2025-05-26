@@ -1,0 +1,10 @@
+<h2>Ativar Autenticação em Dois Fatores</h2>
+<img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+<p>Escaneie este QR Code no <strong>Google Authenticator</strong> ou digite o segredo manualmente:</p>
+<pre>{{ secret }}</pre>
+
+<form method="POST">
+    <input type="hidden" name="secret" value="{{ secret }}">
+    <input type="text" name="code" placeholder="Digite o código do app" required>
+    <button type="submit">Ativar 2FA</button>
+</form>
