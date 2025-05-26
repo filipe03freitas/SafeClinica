@@ -150,6 +150,9 @@
                     <i class="fas fa-exclamation-triangle me-2 text-primary"></i>
                     Eventos de Segurança
                 </h5>
+                <a href="{{ url_for('setup_2fa') }}" class="btn btn-outline-primary">
+                    ⚙️ Configurar 2FA
+                </a>
                 <div class="d-flex">
                     <button id="refresh-btn" class="btn btn-sm btn-outline-primary me-2">
                         <i class="fas fa-sync-alt me-1"></i>Atualizar
@@ -338,7 +341,7 @@
 
                     if (response.ok) {
                         setTimeout(() => {
-                            window.location.href = '/login'; 
+                            window.location.href = '/login';
                         }, 1000);
                     } else {
                         throw new Error('Falha no logout');
@@ -351,13 +354,13 @@
                 }
             });
 
-            
+
             socket.on('new_security_event', (data) => {
                 updateConnectedDevices();
             });
 
             updateConnectedDevices();
-            setInterval(updateConnectedDevices, 30000); 
+            setInterval(updateConnectedDevices, 30000);
         });
     </script>
 </body>
