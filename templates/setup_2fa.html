@@ -1,26 +1,58 @@
 {% extends "base.html" %}
+
+{% block title %}Ativar 2FA{% endblock %}
+
 {% block content %}
+
+{% if is_new_user %}
+<div class="alert alert-success mb-4">
+    <i class="fas fa-check-circle me-2"></i>
+    Cadastro realizado com sucesso! Configure o 2FA para continuar.
+</div>
+{% endif %}
+
 <div class="container">
-    <h2 class="my-4">🔒 Ativar Autenticação em Dois Fatores</h2>
-    
-    <div class="card shadow">
-        <div class="card-body text-center">
-            <h5>1. Escaneie este QR Code:</h5>
-            <img src="data:image/png;base64,{{ qr_code }}" class="img-fluid my-3" style="max-width: 200px;">
-            <p class="text-muted">
-                Use <strong>Google Authenticator</strong> ou similar
-            </p>
-            
-            <hr>
-            
-            <h5 class="mt-4">2. Digite o código gerado:</h5>
-            <form method="POST" class="mt-3">
-                <input type="text" name="code" class="form-control text-center" 
-                       placeholder="Ex: 123456" required style="font-size: 1.2rem;">
-                <button type="submit" class="btn btn-primary btn-lg mt-3">
-                    Ativar 2FA
-                </button>
-            </form>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+
+                    <h2 class="card-title mb-4">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        🔒 Ativar Autenticação em Dois Fatores
+                    </h2>
+
+                    <div class="mb-4">
+                        <p class="fw-bold">1. Escaneie este QR Code:</p>
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code para 2FA" class="img-fluid mb-3"
+                            style="max-width: 200px;">
+                        <p class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Use Google Authenticator, Microsoft Authenticator ou similar
+                        </p>
+                    </div>
+
+                    <form method="POST" class="mb-4">
+                        <div class="mb-3">
+                            <label for="code" class="form-label fw-bold">
+                                2. Digite o código gerado:
+                            </label>
+                            <input type="text" class="form-control text-center" id="code" name="code"
+                                placeholder="Ex: 123456" style="max-width: 200px; margin: 0 auto;" required>
+                        </div>
+
+                        <div class="d-flex justify-content-center gap-3 mt-4">
+                            <a href="{{ url_for('clinic_dashboard') }}" class="btn btn-outline-danger px-4">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-shield-alt me-1"></i> Ativar 2FA
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>

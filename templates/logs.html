@@ -1,137 +1,129 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>Logs - {{ clinic_name }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-
-        pre {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 5px;
-            white-space: pre-wrap;
-        }
-
         .header {
             display: flex;
             justify-content: space-between;
             margin-bottom: 20px;
         }
-
-        .log-actions {
-            margin-bottom: 15px;
+        .log-table {
+            margin-top: 20px;
         }
-
-        /* Estilo da notificação */
+        .table-success {
+            background-color: #e8f5e9;
+        }
+        .table-danger {
+            background-color: #ffebee;
+        }
+        .table-warning {
+            background-color: #fff8e1;
+        }
         #notification {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background-color: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            display: none;
-            max-width: 300px;
             z-index: 1000;
-            border-left: 5px solid #28a745;
-        }
-
-        .close-notification {
-            float: right;
-            cursor: pointer;
-            margin-left: 10px;
-            color: #155724;
         }
     </style>
 </head>
-
 <body>
     <div class="container">
-        <div id="notification">
-            <span class="close-notification">&times;</span>
-            <i class="bi bi-check-circle-fill"></i> Logs copiados com sucesso!
-        </div>
-
-        <div class="header">
-            <h2>Logs de Segurança - {{ clinic_name }}</h2>
-            <div>
-                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-sm btn-outline-secondary">Voltar</a>
-                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger">Sair</a>
+        <div id="notification" class="toast align-items-center text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i> Logs copiados com sucesso!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
 
-        <div class="log-actions">
-            <a href="{{ url_for('download_logs') }}" class="btn btn-primary">
-                <i class="bi bi-file-earmark-zip"></i> Download (ZIP)
+        <div class="header">
+            <h2><i class="fas fa-scroll me-2"></i>Logs de Segurança - {{ clinic_name }}</h2>
+            <div>
+                <a href="{{ url_for('clinic_dashboard') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar
+                </a>
+                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger">
+                    <i class="fas fa-sign-out-alt me-1"></i> Sair
+                </a>
+            </div>
+        </div>
+
+        <div class="log-actions mb-3">
+            <a href="{{ url_for('download_logs') }}" class="btn btn-primary me-2">
+                <i class="fas fa-file-export me-1"></i> Exportar CSV
             </a>
             <button id="copyButton" class="btn btn-secondary">
-                <i class="bi bi-clipboard"></i> Copiar Logs
+                <i class="fas fa-copy me-1"></i> Copiar Logs
             </button>
         </div>
 
-        <pre id="logs-content">
-            {% for log in logs %}
-            {{ log.timestamp }} | {{ log.ip }} | {{ log.event_type }} | {{ log.description }} | {{ log.severity }}
-            {% endfor %}
-        </pre>
+        <div class="table-responsive log-table">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>IP</th>
+                        <th>Evento</th>
+                        <th>Descrição</th>
+                        <th>Severidade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr class="{% if log.event_type == 'login_success' %}table-success{% elif log.event_type == 'login_failed' %}table-danger{% elif log.event_type == 'logout' %}table-warning{% endif %}">
+                        <td>{{ log.timestamp }}</td>
+                        <td>{{ log.ip }}</td>
+                        <td>
+                            {% if log.event_type == 'login_success' %}
+                                <i class="fas fa-check-circle text-success me-2"></i>Login
+                            {% elif log.event_type == 'login_failed' %}
+                                <i class="fas fa-times-circle text-danger me-2"></i>Tentativa
+                            {% elif log.event_type == 'logout' %}
+                                <i class="fas fa-sign-out-alt text-warning me-2"></i>Logout
+                            {% else %}
+                                {{ log.event_type }}
+                            {% endif %}
+                        </td>
+                        <td>{{ log.description }}</td>
+                        <td>{{ log.severity }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const copyButton = document.getElementById('copyButton');
-            const notification = document.getElementById('notification');
-            const closeButton = document.querySelector('.close-notification');
-
-            function showNotification() {
-                notification.style.display = 'block';
-                setTimeout(() => {
-                    notification.style.display = 'none';
-                }, 3000);
-            }
-
-            closeButton.addEventListener('click', () => {
-                notification.style.display = 'none';
-            });
+            const toast = new bootstrap.Toast(document.getElementById('notification'));
 
             copyButton.addEventListener('click', async () => {
                 try {
-                    const logsContent = document.getElementById('logs-content').innerText;
+                    let logsText = "Data/Hora\tIP\tEvento\tDescrição\tSeveridade\n";
+                    document.querySelectorAll('tbody tr').forEach(row => {
+                        const cells = row.querySelectorAll('td');
+                        logsText += `${cells[0].innerText}\t${cells[1].innerText}\t${cells[2].innerText}\t${cells[3].innerText}\t${cells[4].innerText}\n`;
+                    });
 
-                    if (navigator.clipboard) {
-                        await navigator.clipboard.writeText(logsContent);
-                        showNotification();
-                        return;
-                    }
-
-                    const textarea = document.createElement('textarea');
-                    textarea.value = logsContent;
-                    textarea.style.position = 'fixed';
-                    textarea.style.opacity = 0;
-                    document.body.appendChild(textarea);
-                    textarea.select();
-
-                    if (document.execCommand('copy')) {
-                        showNotification();
-                    } else {
-                        throw new Error('Fallback copy failed');
-                    }
-
-                    document.body.removeChild(textarea);
+                    await navigator.clipboard.writeText(logsText);
+                    toast.show();
                 } catch (err) {
                     console.error('Erro ao copiar:', err);
-                    alert('Falha ao copiar os logs. Selecione o texto manualmente e pressione Ctrl+C.');
+                    alert('Falha ao copiar os logs. Selecione a tabela manualmente e pressione Ctrl+C.');
                 }
             });
         });
     </script>
 </body>
-
 </html>

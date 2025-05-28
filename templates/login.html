@@ -1,230 +1,272 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="pt-BR">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SafeClinica - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        .login-container {
             max-width: 400px;
-            margin: 50px auto;
-            background-color: #f5f5f5;
-        }
-
-        .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .tab {
-            overflow: hidden;
-            border: 1px solid #ccc;
-            background-color: #f1f1f1;
-            border-radius: 5px 5px 0 0;
-        }
-
-        .tab button {
-            float: left;
-            border: none;
-            outline: none;
-            cursor: pointer;
-            padding: 14px 16px;
-            transition: 0.3s;
-            width: 50%;
-        }
-
-        .tab button:hover {
-            background-color: #ddd;
-        }
-
-        .tab button.active {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .tabcontent {
-            display: none;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-top: none;
-            border-radius: 0 0 5px 5px;
-        }
-
-        input {
             width: 100%;
+            margin: 0 auto;
+        }
+        .login-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .card-header {
+            background-color: #4e73df;
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            text-align: center;
+            padding: 1.5rem;
+        }
+        .form-control {
             padding: 12px;
-            margin: 8px 0;
-            box-sizing: border-box;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 5px;
         }
-
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 14px 20px;
+        .btn-login {
+            background-color: #4e73df;
             border: none;
-            cursor: pointer;
-            width: 100%;
-            border-radius: 4px;
-            font-size: 16px;
-            margin-top: 10px;
+            padding: 12px;
+            font-weight: 600;
         }
-
-        button:hover {
-            background-color: #45a049;
+        .btn-login:hover {
+            background-color: #3a5bc7;
         }
-
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            font-weight: 600;
+        }
+        .nav-tabs .nav-link.active {
+            color: #4e73df;
+            border-bottom: 3px solid #4e73df;
+            background: transparent;
+        }
+        .tab-content {
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
         .message {
-            color: red;
-            margin: 15px 0;
+            margin-top: 15px;
             text-align: center;
         }
-
-        #modal2fa {
+        .error-message {
+            color: #e74a3b;
+        }
+        .success-message {
+            color: #1cc88a;
+        }
+        #twoFactorModal {
             display: none;
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 4px;
-        }
-
-        h2 {
-            text-align: center;
-            color: #333;
         }
     </style>
 </head>
-
 <body>
-    <div class="container">
-        <h2>SafeClinica</h2>
-
-        <div class="tab">
-            <button class="tablinks active" onclick="openTab(event, 'login')">Login</button>
-            <button class="tablinks" onclick="openTab(event, 'register')">Cadastrar Clínica</button>
-        </div>
-
-        <div id="login" class="tabcontent" style="display: block;">
-            <div id="loginFields">
-                <input type="text" id="username" placeholder="Usuário Admin" required>
-                <input type="password" id="password" placeholder="Senha" required>
-                <button onclick="submitLogin()">Entrar</button>
+    <div class="login-container">
+        <div class="card login-card">
+            <div class="card-header">
+                <h3><i class="fas fa-shield-alt me-2"></i>SafeClínica</h3>
             </div>
+            
+            <ul class="nav nav-tabs justify-content-center" >
+                <li class="nav-item mx-5">
+                    <a class="nav-link active" id="login-tab" data-bs-toggle="tab" href="#login">Login</a>
+                </li>
+                <li class="nav-item mx-5">
+                    <a class="nav-link" id="register-tab" data-bs-toggle="tab" href="#register">Cadastrar</a>
+                </li>
+            </ul>
 
-            <div id="modal2fa" style="display: none;">
-                <h3>Verificação em Dois Fatores</h3>
-                <input type="text" id="code2fa" placeholder="Código de 6 dígitos">
-                <button onclick="verify2fa()">Verificar</button>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="login">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Usuário</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-login btn-block w-100">
+                            <i class="fas fa-sign-in-alt me-2"></i> Entrar
+                        </button>
+                    </form>
+                    
+                    <div id="loginMessage" class="message"></div>
+                    
+                    <div id="twoFactorModal" class="mt-4">
+                        <h5 class="text-center mb-3"><i class="fas fa-mobile-alt me-2"></i>Verificação em Dois Fatores</h5>
+                        <div class="mb-3">
+                            <input type="text" class="form-control text-center" id="twoFactorCode" 
+                                   placeholder="Código de 6 dígitos" maxlength="6">
+                        </div>
+                        <button id="verify2faBtn" class="btn btn-login btn-block w-100">
+                            <i class="fas fa-check-circle me-2"></i> Verificar
+                        </button>
+                        <div id="twoFactorMessage" class="message mt-2"></div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="register">
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label for="clinic_name" class="form-label">Nome da Clínica</label>
+                            <input type="text" class="form-control" id="clinic_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reg_username" class="form-label">Usuário Admin</label>
+                            <input type="text" class="form-control" id="reg_username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reg_password" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="reg_password" required>
+                        </div>
+                        <button type="submit" class="btn btn-login btn-block w-100">
+                            <i class="fas fa-user-plus me-2"></i> Cadastrar
+                        </button>
+                    </form>
+                    <div id="registerMessage" class="message"></div>
+                </div>
             </div>
-
-            <div id="message" class="message"></div>
-        </div>
-
-        <div id="register" class="tabcontent">
-            <form method="POST" action="{{ url_for('register') }}">
-                <input type="text" name="clinic_name" placeholder="Nome da Clínica" required>
-                <input type="text" name="username" placeholder="Usuário Admin" required>
-                <input type="password" name="password" placeholder="Senha" required>
-                <button type="submit">Cadastrar</button>
-            </form>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
-        function showMessage(text, isError = true) {
-            const msgDiv = document.getElementById('message');
-            msgDiv.textContent = text;
-            msgDiv.style.color = isError ? 'red' : 'green';
-        }
-
-        async function submitLogin() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            if (!username || !password) {
-                showMessage('Usuário e senha são obrigatórios');
-                return;
-            }
-
-            try {
-                const response = await fetch('/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    if (result.requires2fa) {
-                        document.getElementById('loginFields').style.display = 'none';
-                        document.getElementById('modal2fa').style.display = 'block';
-                        // Auto-preenchimento apenas em desenvolvimento
-                        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-                            document.getElementById('code2fa').value = "123456";
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const twoFactorModal = document.getElementById('twoFactorModal');
+            const loginMessage = document.getElementById('loginMessage');
+            const registerMessage = document.getElementById('registerMessage');
+            const twoFactorMessage = document.getElementById('twoFactorMessage');
+            
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                try {
+                    const response = await fetch('/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        if (data.requires2fa) {
+                            loginForm.style.display = 'none';
+                            twoFactorModal.style.display = 'block';
+                            loginMessage.textContent = '';
+                            
+                            if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                                document.getElementById('twoFactorCode').value = "123456";
+                            }
+                        } else {
+                            window.location.href = data.redirect || '/clinic/dashboard';
                         }
-                    } else if (result.success) {
-                        window.location.href = result.redirect || "/clinic/dashboard";
+                    } else {
+                        showMessage(loginMessage, data.message || 'Erro no login', 'error');
                     }
-                } else {
-                    showMessage(result.message || 'Erro no login');
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showMessage(loginMessage, 'Erro ao conectar com o servidor', 'error');
                 }
-            } catch (error) {
-                console.error("Erro:", error);
-                showMessage("Erro ao conectar com o servidor");
-            }
-        }
+            });
 
-        async function verify2fa() {
-            const code = document.getElementById('code2fa').value;
-
-            if (!code || code.length !== 6) {
-                showMessage('Código deve ter 6 dígitos');
-                return;
-            }
-
-            try {
-                const response = await fetch('/verify-2fa', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ code })
-                });
-
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    window.location.href = result.redirect || "/clinic/dashboard";
-                } else {
-                    showMessage(result.message || 'Código inválido');
+            registerForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const clinic_name = document.getElementById('clinic_name').value;
+                const username = document.getElementById('reg_username').value;
+                const password = document.getElementById('reg_password').value;
+                
+                try {
+                    const response = await fetch('/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            clinic_name, 
+                            username, 
+                            password 
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        if (data.requires2fa) {
+                            registerForm.style.display = 'none';
+                            twoFactorModal.style.display = 'block';
+                            registerMessage.textContent = '';
+                        } else {
+                            window.location.href = data.redirect || '/clinic/dashboard';
+                        }
+                    } else {
+                        showMessage(registerMessage, data.message || 'Erro no cadastro', 'error');
+                    }
+                } catch (error) {
+                    console.error('Register error:', error);
+                    showMessage(registerMessage, 'Erro ao conectar com o servidor', 'error');
                 }
-            } catch (error) {
-                console.error("Erro:", error);
-                showMessage("Erro ao verificar código");
+            });
+            
+            document.getElementById('verify2faBtn').addEventListener('click', async function() {
+                const code = document.getElementById('twoFactorCode').value;
+                
+                if (!code || code.length !== 6) {
+                    showMessage(twoFactorMessage, 'Código deve ter 6 dígitos', 'error');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/verify-2fa', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ code })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        window.location.href = data.redirect || '/clinic/dashboard';
+                    } else {
+                        showMessage(twoFactorMessage, data.message || 'Código inválido', 'error');
+                    }
+                } catch (error) {
+                    console.error('2FA error:', error);
+                    showMessage(twoFactorMessage, 'Erro ao verificar código', 'error');
+                }
+            });
+            
+            function showMessage(element, text, type = 'error') {
+                element.textContent = text;
+                element.className = `message ${type}-message`;
             }
-        }
+        });
     </script>
 </body>
-
 </html>

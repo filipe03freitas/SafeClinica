@@ -26,11 +26,6 @@
             border-left: 4px solid var(--danger-color);
         }
 
-        .device-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
         .critical {
             background-color: #ffe6e6 !important;
         }
@@ -48,7 +43,7 @@
         }
 
         .badge-primary {
-            background-color: var(--primary-color);
+            background-color: green;
         }
 
         #notification-toast {
@@ -72,7 +67,6 @@
 
 <body>
     <div class="container-fluid">
-        <!-- Cabeçalho -->
         <div class="header d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3">
                 <i class="fas fa-shield-alt me-2 text-primary"></i>
@@ -83,9 +77,7 @@
             </button>
         </div>
 
-        <!-- Linha de Widgets -->
         <div class="row">
-            <!-- Dispositivos Ativos -->
             <div class="col-md-4 mb-4">
                 <div class="card security-card h-100">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -108,7 +100,6 @@
                 </div>
             </div>
 
-            <!-- Estatísticas -->
             <div class="col-md-8 mb-4">
                 <div class="card h-100">
                     <div class="card-header bg-white">
@@ -143,7 +134,6 @@
             </div>
         </div>
 
-        <!-- Tabela de Eventos -->
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
@@ -181,17 +171,26 @@
                         </thead>
                         <tbody id="security-events">
                             {% for alert in alerts %}
-                            <tr
-                                class="{{ 'critical' if alert[5] == 'critical' else 'warning' if alert[5] == 'warning' }}">
+                            <tr class="{{ 'table-danger' if alert[3] == 'login_failed' else 
+              'table-warning' if alert[3] == 'logout' else 
+              'table-success' if alert[3] == 'login_success' else
+              'table-info' if alert[3] == 'register_success' }}">
                                 <td>{{ alert[1] }}</td>
                                 <td>{{ alert[2] }}</td>
-                                <td>{{ alert[3] }}</td>
                                 <td>
-                                    <span
-                                        class="badge {{ 'badge-critical' if alert[5] == 'critical' else 'badge-warning' if alert[5] == 'warning' else 'badge-primary' }}">
-                                        {{ alert[5] }}
-                                    </span>
+                                    {% if alert[3] == 'login_failed' %}
+                                    <i class="fas fa-times-circle text-danger me-2"></i>Tentativa de login falha
+                                    {% elif alert[3] == 'logout' %}
+                                    <i class="fas fa-sign-out-alt text-warning me-2"></i>Logout
+                                    {% elif alert[3] == 'login_success' %}
+                                    <i class="fas fa-check-circle text-success me-2"></i>Login bem sucedido
+                                    {% elif alert[3] == 'register_success' %}
+                                    <i class="fas fa-user-plus text-info me-2"></i>Registro bem sucedido
+                                    {% else %}
+                                    {{ alert[3] }}
+                                    {% endif %}
                                 </td>
+                                <td>{{ alert[5] }}</td>
                                 <td>
                                     <div class="dropdown action-dropdown">
                                         <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button"
@@ -222,7 +221,6 @@
         </div>
     </div>
 
-    <!-- Toast de Notificação -->
     <div id="notification-toast" class="toast align-items-center text-white bg-success" role="alert"
         aria-live="assertive" aria-atomic="true">
         <div class="d-flex">

@@ -1,0 +1,7 @@
+auxas.py
+app.txt
+limpar_bd.py
+*.db
+*.sqlite
+.env
+__pycache__/

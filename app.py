@@ -5,6 +5,7 @@ import io
 import pyotp
 import base64
 import qrcode
+import csv
 from flask import Flask, make_response, render_template, redirect, send_from_directory, url_for, request, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
@@ -24,7 +25,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Modelo de usuário
 class User(UserMixin):
     def __init__(self, id, username, password_hash, totp_secret=None):
         self.id = id
@@ -88,10 +88,8 @@ def generate_2fa_qr_code(secret, username):
     img.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-def log_alert(clinic_id, ip, event_type, description, severity="medium"):
-    """
-    Registra um alerta de segurança no banco de dados e atualiza as informações do dispositivo.
-    
+def log_alert(clinic_id, ip, event_type, description, severity="low"):
+    """    
     Args:
         clinic_id (int): ID da clínica associada ao alerta
         ip (str): Endereço IP do dispositivo
@@ -152,7 +150,7 @@ def log_alert(clinic_id, ip, event_type, description, severity="medium"):
         
 def get_db_connection():
     conn = sqlite3.connect('safeclinica.db', timeout=30, check_same_thread=False)
-    conn.execute("PRAGMA journal_mode=WAL")  # Melhora o acesso concorrente
+    conn.execute("PRAGMA journal_mode=WAL")
     return conn
 
 def get_current_devices(clinic_id):
@@ -193,108 +191,204 @@ def dynamic_config():
         NGROK_URL: "https://e985-168-181-51-223.ngrok-free.app"
     }};
     """, 200, {'Content-Type': 'application/javascript'}
-
-@app.route('/login', methods=['POST'])
+    
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    # Limpa sessão anterior
-    session.clear()
-
-    # Aceita apenas JSON
+    if request.method == 'GET':
+        return render_template('login.html')
+    
     if not request.is_json:
         return jsonify({
             'success': False,
-            'message': 'Content-Type must be application/json'
+            'message': 'Formato inválido (requer JSON)'
         }), 400
 
     data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+    username = data.get('username', '').strip()
+    password = data.get('password', '').strip()
+    ip_address = request.remote_addr
 
     if not username or not password:
+        log_alert(0, ip_address, 'login_attempt', 
+                'Tentativa de login sem credenciais', 'low')
         return jsonify({
             'success': False,
             'message': 'Usuário e senha são obrigatórios'
         }), 400
 
+    conn = None
     try:
         conn = sqlite3.connect('safeclinica.db')
         c = conn.cursor()
-        c.execute(
-            "SELECT id, name, admin_password, totp_secret FROM clinics WHERE admin_user = ?",
-            (username,)
-        )
+        
+        c.execute("""
+            SELECT id, name, admin_password, totp_secret 
+            FROM clinics 
+            WHERE admin_user = ?
+            """, (username,))
         clinic = c.fetchone()
-        conn.close()
-
+        
         if clinic and check_password_hash(clinic[2], password):
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            c.execute("""
+                INSERT INTO devices (ip, last_seen, first_seen)
+                VALUES (?, ?, COALESCE((SELECT first_seen FROM devices WHERE ip = ?), ?))
+                ON CONFLICT(ip) DO UPDATE SET last_seen = excluded.last_seen
+                """, (ip_address, now, ip_address, now))
+            conn.commit()
+            
+            connected_devices[ip_address] = datetime.now()
+            
             session['temp_user_id'] = clinic[0]
             session['temp_username'] = username
-
-            if clinic[3]:  # Se tem 2FA ativado
+            
+            log_alert(
+                clinic[0], ip_address, 'login_success',
+                f'Login bem-sucedido para {username}', 'low'
+            )
+            
+            if clinic[3]:
                 return jsonify({
                     'success': True,
-                    'requires2fa': True
+                    'requires2fa': True,
+                    'ip': ip_address
                 })
-
-            # Login sem 2FA
-            user = User(id=clinic[0], username=username, password_hash=clinic[2])
+            
+            user = User(id=clinic[0], username=username, 
+                       password_hash=clinic[2], totp_secret=clinic[3])
             login_user(user)
             session['clinic_id'] = clinic[0]
             session['clinic_name'] = clinic[1]
-
+            
             return jsonify({
                 'success': True,
-                'redirect': url_for('clinic_dashboard')
+                'redirect': url_for('clinic_dashboard'),
+                'ip': ip_address
             })
-
+        
+        log_alert(
+            clinic[0] if clinic else 0, 
+            ip_address, 'login_failed',
+            f'Tentativa de login falha para {username}', 'critical'
+        )
+        
         return jsonify({
             'success': False,
-            'message': 'Usuário ou senha incorretos'
+            'message': 'Login e/ou senha incorretos'
         }), 401
-
-    except Exception as e:
-        print(f"Erro no login: {str(e)}")
-        session.clear()
+        
+    except sqlite3.Error as db_error:
+        log_alert(0, ip_address, 'login_error',
+                 f'Erro de banco de dados: {str(db_error)}', 'high')
         return jsonify({
             'success': False,
-            'message': 'Erro durante o login'
+            'message': 'Erro no servidor'
         }), 500
         
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        clinic_name = request.form['clinic_name']
-        username = request.form['username']
-        password = generate_password_hash(request.form['password'])
+    except Exception as e:
+        log_alert(0, ip_address, 'login_error',
+                 f'Erro inesperado: {str(e)}', 'high')
+        return jsonify({
+            'success': False,
+            'message': 'Erro no servidor'
+        }), 500
         
-        try:
-            conn = sqlite3.connect('safeclinica.db', timeout=30, check_same_thread=False)
-            c = conn.cursor()
-            
-            c.execute("INSERT INTO clinics (name, admin_user, admin_password) VALUES (?, ?, ?)",
-                     (clinic_name, username, password))
-            conn.commit()
-            
-            c.execute("SELECT id FROM clinics WHERE admin_user = ?", (username,))
-            clinic_id = c.fetchone()[0]
+    finally:
+        if conn is not None:
             conn.close()
             
-            # Autentica e redireciona diretamente
-            user = User(id=clinic_id, username=username, password_hash=password)
-            login_user(user)
-            session['clinic_id'] = clinic_id
-            session['clinic_name'] = clinic_name
-            
-            return redirect(url_for('clinic_dashboard'))  # Redirecionamento HTTP tradicional
-            
-        except sqlite3.IntegrityError:
-            flash('Nome da clínica ou usuário já existente')
-        except Exception as e:
-            flash(f'Erro durante o cadastro: {str(e)}')
+                        
+@app.route('/register', methods=['POST'])
+def register():
+    """Processa o cadastro de novas clínicas"""
+    if not request.is_json:
+        return jsonify({
+            "success": False,
+            "message": "Formato inválido (requer JSON)"
+        }), 400
+
+    try:
+        data = request.get_json()
+        clinic_name = data.get('clinic_name', '').strip()
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
+        ip_address = request.remote_addr
+
+        if not all([clinic_name, username, password]):
+            return jsonify({
+                "success": False,
+                "message": "Todos os campos são obrigatórios"
+            }), 400
+
+        if len(password) < 8:
+            return jsonify({
+                "success": False,
+                "message": "A senha deve ter pelo menos 8 caracteres"
+            }), 400
+
+        conn = sqlite3.connect('safeclinica.db')
+        c = conn.cursor()
         
-        return redirect(url_for('register'))  # Volta para o registro em caso de erro
-    
-    return render_template('login.html', show_register=True)
+        c.execute("SELECT id FROM clinics WHERE admin_user = ? OR name = ?", 
+                 (username, clinic_name))
+        if c.fetchone():
+            return jsonify({
+                "success": False,
+                "message": "Clínica ou usuário já existente"
+            }), 400
+
+        password_hash = generate_password_hash(password)
+        c.execute(
+            "INSERT INTO clinics (name, admin_user, admin_password) VALUES (?, ?, ?)",
+            (clinic_name, username, password_hash)
+        )
+        clinic_id = c.lastrowid
+        
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        c.execute("""
+            INSERT INTO devices (ip, last_seen, first_seen)
+            VALUES (?, ?, ?)
+            ON CONFLICT(ip) DO UPDATE SET last_seen = excluded.last_seen
+        """, (ip_address, now, now))
+        
+        user = User(id=clinic_id, username=username, password_hash=password_hash)
+        login_user(user)
+        
+        session['clinic_id'] = clinic_id
+        session['clinic_name'] = clinic_name
+        session['temp_user_id'] = clinic_id 
+        session['temp_username'] = username
+        
+        conn.commit()
+        
+        log_alert(
+            clinic_id, ip_address, 'register_success',
+            f'Novo cadastro: {clinic_name}', 'Nenhum'
+        )
+        
+        return jsonify({
+            "success": True,
+            "redirect": url_for('setup_2fa', new_user=True),
+            "message": "Cadastro realizado com sucesso"
+        })
+
+    except sqlite3.IntegrityError:
+        return jsonify({
+            "success": False,
+            "message": "Erro de integridade no banco de dados"
+        }), 400
+    except Exception as e:
+        log_alert(0, ip_address, 'register_error',
+                 f'Erro no cadastro: {str(e)}', 'high')
+        return jsonify({
+            "success": False,
+            "message": f"Erro no servidor: {str(e)}"
+        }), 500
+    finally:
+        if 'conn' in locals():
+            conn.close()
+            
 """@app.route('/logout')
 def logout():
     try:
@@ -364,9 +458,11 @@ def clinic_dashboard():
         return redirect(url_for('login'))
     
     clinic_id = session['clinic_id']
+    now = datetime.now()
+    
     conn = sqlite3.connect('safeclinica.db', check_same_thread=False)
-
     c = conn.cursor()
+    
     c.execute("""
         SELECT id, timestamp, ip, event_type, description, severity 
         FROM alerts 
@@ -375,12 +471,57 @@ def clinic_dashboard():
         LIMIT 50
     """, (clinic_id,))
     alerts = c.fetchall()
+    
+    c.execute("""
+        SELECT ip, custom_name, last_seen 
+        FROM devices 
+        WHERE last_seen > datetime('now', '-30 days')
+        ORDER BY last_seen DESC
+    """)
+    db_devices = c.fetchall()
     conn.close()
+    
+    def safe_parse_datetime(dt_str):
+        try:
+            return datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S.%f")
+        except ValueError:
+            try:
+                return datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                print(f"Formato de data inválido: {dt_str}")
+                return datetime.now()
+    
+    all_devices = {}
+    
+    for ip, custom_name, last_seen in db_devices:
+        if isinstance(last_seen, str):
+            last_seen = safe_parse_datetime(last_seen)
+        
+        all_devices[ip] = {
+            'custom_name': custom_name,
+            'last_seen': last_seen,
+            'source': 'database'
+        }
+    
+    for ip, last_seen in connected_devices.items():
+        all_devices[ip] = {
+            'custom_name': all_devices.get(ip, {}).get('custom_name', ip),
+            'last_seen': last_seen,
+            'source': 'memory'
+        }
+    
+    active_devices = {
+        ip: info 
+        for ip, info in all_devices.items() 
+        if (now - info['last_seen']).total_seconds() < 300
+    }
     
     return render_template('clinic_dashboard.html',
                          clinic_name=session['clinic_name'],
-                         alerts=alerts)
-
+                         alerts=alerts,
+                         devices=active_devices,
+                         now=now)
+    
 @app.route('/api/device/<ip>')
 def get_device_info(ip):
     conn = sqlite3.connect('safeclinica.db')
@@ -490,47 +631,60 @@ def get_connected_devices():
         return jsonify([])
     
     active_devices = {
-        ip: time.isoformat() 
+        ip: time 
         for ip, time in connected_devices.items() 
-        if (datetime.now() - time).seconds < 300
+        if (datetime.now() - time).total_seconds() < 300
     }
     
     return jsonify([
-        {'ip': ip, 'last_seen': last_seen} 
+        {'ip': ip, 'last_seen': last_seen.isoformat()} 
         for ip, last_seen in active_devices.items()
     ])
-
 
 @socketio.on('connect')
 def handle_connect():
     if 'clinic_id' in session:
         clinic_id = session['clinic_id']
         ip = request.remote_addr
-        connected_devices[ip] = datetime.datetime.now()
+        
+        connected_devices[ip] = datetime.now()
         join_room(f'clinic_{clinic_id}')
+        
         emit('initial_data', {
             'devices': get_current_devices(clinic_id),
             'events': get_recent_alerts(clinic_id)
         })
         
-@socketio.on('connect')
-def handle_connect():
-    if 'clinic_id' in session:
-        ip = request.remote_addr
-        connected_devices[ip] = datetime.now()
-        emit('device_update', {
-            'count': len(connected_devices),
-            'devices': list(connected_devices.keys())
-        }, broadcast=True)
-
-@socketio.on('request_update')
-def handle_update_request():
-    if 'clinic_id' in session:
-        clinic_id = session['clinic_id']
-        emit('update_data', {
-            'devices': get_current_devices(clinic_id),
-            'events': get_recent_alerts(clinic_id)
+        socketio.emit('device_connected', {
+            'ip': ip,
+            'timestamp': datetime.now().isoformat()
         }, room=f'clinic_{clinic_id}')
+        
+@socketio.on('heartbeat')
+def handle_heartbeat():
+    if 'clinic_id' in session and request.remote_addr:
+        ip = request.remote_addr
+        now = datetime.now()
+        connected_devices[ip] = now
+        
+        try:
+            conn = sqlite3.connect('safeclinica.db')
+            c = conn.cursor()
+            c.execute("""
+                INSERT INTO devices (ip, last_seen, first_seen)
+                VALUES (?, ?, COALESCE((SELECT first_seen FROM devices WHERE ip = ?), ?))
+                ON CONFLICT(ip) DO UPDATE SET last_seen = excluded.last_seen
+            """, (ip, now, ip, now))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Erro ao atualizar dispositivo: {str(e)}")
+        
+        socketio.emit('device_update', {
+            'ip': ip,
+            'timestamp': now.isoformat()
+        }, room=f'clinic_{session["clinic_id"]}')
+        
         
 @app.route('/update_device_name', methods=['POST'])
 def update_device_name():
@@ -561,7 +715,7 @@ def update_device_name():
     
     finally:
         conn.close()
-
+        
 @app.route('/download_logs')
 def download_logs():
     try:
@@ -569,7 +723,7 @@ def download_logs():
             return redirect(url_for('login'))
 
         clinic_id = session['clinic_id']
-        clinic_name = session.get('clinic_name', 'logs')
+        clinic_name = session.get('clinic_name', 'logs').replace(" ", "_")
         
         conn = sqlite3.connect('safeclinica.db')
         c = conn.cursor()
@@ -582,15 +736,40 @@ def download_logs():
         logs = c.fetchall()
         conn.close()
 
-        csv_content = "Data/Hora,IP,Tipo de Evento,Descrição,Severidade\n"
+        csv_content = io.StringIO()
+        writer = csv.writer(
+            csv_content, 
+            delimiter=';',
+            quotechar='"', 
+            quoting=csv.QUOTE_ALL
+        )
+        
+        writer.writerow([
+            'Data/Hora', 
+            'IP', 
+            'Tipo de Evento', 
+            'Descrição', 
+            'Severidade', 
+            'Clínica'
+        ])
+        
         for log in logs:
-            csv_content += f'"{log[0]}","{log[1]}","{log[2]}","{log[3]}","{log[4]}"\n'
-
+            writer.writerow([
+                log[0],
+                log[1],
+                log[2],
+                log[3],
+                log[4],  
+                session['clinic_name']
+            ])
+        
+        csv_data = csv_content.getvalue().encode('utf-8-sig')
+        
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             zip_file.writestr(
                 f'logs_{clinic_name}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv', 
-                csv_content
+                csv_data
             )
         zip_buffer.seek(0)
 
@@ -605,10 +784,8 @@ def download_logs():
     except Exception as e:
         print(f"Erro ao gerar download: {str(e)}")
         flash("Ocorreu um erro ao gerar o arquivo de download", "error")
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('clinic_dashboard'))
     
-    
-
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
@@ -621,30 +798,37 @@ def page_not_found(e):
 @app.route('/setup-2fa', methods=['GET', 'POST'])
 @login_required
 def setup_2fa():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
     if request.method == 'POST':
         user_code = request.form.get('code')
         secret = session.get('2fa_secret')
         
-        # Verifica se o código está correto
         if not pyotp.TOTP(secret).verify(user_code):
             flash('❌ Código inválido! Tente novamente.', 'error')
             return redirect(url_for('setup_2fa'))
         
-        conn = sqlite3.connect('safeclinica.db')
-        c = conn.cursor()
-        c.execute("UPDATE clinics SET totp_secret = ? WHERE id = ?", 
-                 (secret, current_user.id))
-        conn.commit()
-        conn.close()
+        try:
+            conn = sqlite3.connect('safeclinica.db')
+            c = conn.cursor()
+            c.execute("UPDATE clinics SET totp_secret = ? WHERE id = ?", 
+                     (secret, current_user.id))
+            conn.commit()
+            flash('✅ 2FA ativado com sucesso!', 'success')
+        except Exception as e:
+            flash(f'Erro ao ativar 2FA: {str(e)}', 'danger')
+        finally:
+            conn.close()
         
-        flash('✅ 2FA ativado com sucesso!', 'success')
         return redirect(url_for('clinic_dashboard'))
     
-    secret = pyotp.random_base32()
-    session['2fa_secret'] = secret 
+    if '2fa_secret' not in session:
+        session['2fa_secret'] = pyotp.random_base32()
     
-    qr_code = generate_2fa_qr_code(secret, current_user.username)
+    qr_code = generate_2fa_qr_code(session['2fa_secret'], current_user.username)
     return render_template('setup_2fa.html', qr_code=qr_code)
+
 
 @app.route('/verify-2fa', methods=['POST'])
 def verify_2fa():
@@ -674,7 +858,6 @@ def verify_2fa():
                 'message': 'Código inválido ou expirado'
             }), 401
 
-        # Login bem-sucedido
         user = User(
             id=session['temp_user_id'],
             username=session['temp_username'],
@@ -702,14 +885,12 @@ def verify_2fa():
 @login_required
 def enable_2fa():
     if request.method == 'POST':
-        # Verificar se já tem 2FA ativado
         if current_user.totp_secret:
             return jsonify({
                 'success': False,
                 'message': '2FA já está ativado para esta conta'
             }), 400
             
-        # Ativar 2FA
         secret = request.form.get('secret')
         user_code = request.form.get('code')
         
@@ -725,7 +906,6 @@ def enable_2fa():
                 'message': 'Código inválido'
             }), 400
         
-        # Salvar no banco de dados
         conn = sqlite3.connect('safeclinica.db', check_same_thread=False)
         c = conn.cursor()
         c.execute("UPDATE clinics SET totp_secret = ? WHERE id = ?", 
@@ -733,7 +913,6 @@ def enable_2fa():
         conn.commit()
         conn.close()
         
-        # Atualizar objeto de usuário
         current_user.totp_secret = secret
         
         return jsonify({
@@ -742,7 +921,6 @@ def enable_2fa():
             'redirect': url_for('clinic_dashboard')
         })
     
-    # GET request - mostrar página de ativação
     if current_user.totp_secret:
         return redirect(url_for('clinic_dashboard'))
     
